@@ -18,6 +18,7 @@
                     "transition_time": "Transition time",
                     "debounce_time": "Debounce time",
                     "ignore_unavailable": "Ignore entities in unavailable state",
+                    "ignore_rgb": "Ignore RGB attribute of lights",
                     "enable_discovery": "Enable discovery"
                 }
             },

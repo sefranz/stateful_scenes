@@ -10,6 +10,7 @@ from homeassistant.helpers.template import area_id, area_name
 
 from .const import (
     ATTRIBUTES_TO_CHECK,
+    CONF_IGNORE_RGB,
     CONF_SCENE_AREA,
     CONF_SCENE_ENTITIES,
     CONF_SCENE_ENTITY_ID,
@@ -124,6 +125,7 @@ class Scene:
         self._restore_on_deactivate = True
         self._debounce_time: float = 0.0
         self._ignore_unavailable = False
+        self._ignore_rgb = False
         self._off_scene_entity_id = None
         self._scene_evaluation_timer = SceneEvaluationTimer(
             hass, self._transition_time, self._debounce_time
@@ -287,6 +289,15 @@ class Scene:
     def set_ignore_unavailable(self, ignore_unavailable):
         """Set the ignore unavailable flag."""
         self._ignore_unavailable = ignore_unavailable
+        
+    @property
+    def ignore_rgb(self) -> bool:
+        """Get the ignore unavailable flag."""
+        return self._ignore_rgb
+
+    def set_ignore_rgb(self, ignore_rgb):
+        """Set the ignore unavailable flag."""
+        self._ignore_rgb = ignore_rgb
 
     async def async_initialize(self) -> None:
         """Initialize the scene and evaluate its initial state."""
@@ -372,6 +383,8 @@ class Scene:
             entity_attrs = new_state.attributes
             old_entity_attrs = old_state.attributes
             for attribute in ATTRIBUTES_TO_CHECK.get(new_state.domain):
+                if self.ignore_rgb and attribute == "rgb_color":
+                    continue
                 if attribute not in old_entity_attrs or attribute not in entity_attrs:
                     continue
 

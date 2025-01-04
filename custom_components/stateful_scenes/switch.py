@@ -319,3 +319,69 @@ class IgnoreUnavailable(SwitchEntity, RestoreEntity):
             return
         self._scene.set_ignore_unavailable(state.state == STATE_ON)
         self._is_on = state.state == STATE_ON
+
+
+class IgnoreRGB(SwitchEntity, RestoreEntity):
+    """Switch entity to ignore RGB attribute of lights."""
+
+    _attr_name = "Ignore RGB attribute of lights"
+    _attr_entity_category = EntityCategory.CONFIG
+    _attr_should_poll = True
+    _attr_assumed_state = False
+
+    def __init__(self, scene: StatefulScenes.Scene) -> None:
+        """Initialize."""
+        self._scene = scene
+        self._name = f"{scene.name} Ignore RGB attribute of lights"
+        self._attr_unique_id = f"{scene.id}_ignore_rgb"
+        self._scene.set_ignore_rgb(scene.ignore_rgb)
+        self._is_on = scene.ignore_rgb
+
+    @property
+    def name(self) -> str:
+        """Return the display name of this light."""
+        return self._name
+
+    @property
+    def device_info(self) -> DeviceInfo | None:
+        """Return the device info."""
+        return DeviceInfo(
+            identifiers={(self._scene.id,)},
+            name=self._scene.name,
+            manufacturer=DEVICE_INFO_MANUFACTURER,
+            suggested_area=self._scene.area_id,
+        )
+
+    @property
+    def is_on(self) -> bool:
+        """Return true if light is on."""
+        return self._is_on
+
+    async def async_turn_on(self, **kwargs) -> None:
+        """Instruct the light to turn on.
+
+        You can skip the brightness part if your light does not support
+        brightness control.
+        """
+        self._scene.set_ignore_rgb(True)
+        self._is_on = self._scene.restore_on_deactivate
+
+    async def async_turn_off(self, **kwargs) -> None:
+        """Instruct the light to turn off."""
+        self._scene.set_ignore_rgb(False)
+        self._is_on = self._scene.restore_on_deactivate
+
+    async def async_update(self) -> None:
+        """Fetch new state data for this light.
+
+        This is the only method that should fetch new data for Home Assistant.
+        """
+        self._is_on = self._scene.ignore_rgb
+
+    async def async_added_to_hass(self):
+        """Handle entity which will be added."""
+        state = await self.async_get_last_state()
+        if not state:
+            return
+        self._scene.set_ignore_rgb(state.state == STATE_ON)
+        self._is_on = state.state == STATE_ON
